@@ -8,17 +8,17 @@ import torch
 import cv2
 
 def downsize_frame(frame, factor=2, sigma = 9):
-  frame_blurred = cv2.GaussianBlur(frame, (sigma, sigma), 0)
-  return frame_blurred[:, ::factor, ::factor]
+    frame_blurred = cv2.GaussianBlur(frame, (sigma, sigma), 0)
+    return frame_blurred[:, ::factor, ::factor]
 
-def downsample(vid, factor=2):
+def downsample(vid, factor=2, sigma = 9):
     frames, channels, height, width = vid.shape
     downsized_frames = []
 
     for i in range(frames):
         frame = vid[i].numpy()
 
-        output_frame = downsize_frame(frame, factor=factor)
+        output_frame = downsize_frame(frame, factor=factor, sigma = sigma)
         downsized_frames.append(output_frame)
 
     downsized_frames = torch.tensor(np.array(downsized_frames))
@@ -38,6 +38,7 @@ class Videos(torch.utils.data.Dataset):
         fn = self.raw_videos[idx]
         original = torch.from_numpy(np.load(osp.join(self.root, fn))).float()
 
+        # this creates 
         original = torch.einsum('ijkl -> iljk', original)
         print(original.shape)
 
@@ -45,6 +46,9 @@ class Videos(torch.utils.data.Dataset):
             original = self.transform(original)
 
         down_sample = downsample(original)
+
+        down_sample = torch.einsum('ijkl -> jikl', down_sample)
+        original = torch.einsum('ijkl -> jikl', original)
         return down_sample, original
 
     def __len__(self):
