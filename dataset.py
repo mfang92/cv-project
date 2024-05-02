@@ -40,7 +40,6 @@ class Videos(torch.utils.data.Dataset):
 
         # this creates 
         original = torch.einsum('ijkl -> iljk', original)
-        print(original.shape)
 
         if self.transform is not None:
             original = self.transform(original)
