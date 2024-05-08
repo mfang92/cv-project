@@ -1,4 +1,5 @@
 from model import Net
+from model_upsample_then_cnn import Net2
 from dataset import *
 
 import os
@@ -30,7 +31,8 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
     val_acc_history = []
     train_acc_history = []
 
-    best_model_wts = copy.deepcopy(model.state_dict())
+    # best_model_wts = copy.deepcopy(model.state_dict())
+    best_model_wts = model.state_dict()
     best_acc = 0.0
 
     for epoch in range(num_epochs):
@@ -79,15 +81,16 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
                 running_corrects += torch.sum(loss)
 
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
-            # epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
+            epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
 
             print('{} Loss: {:.4f}'.format(phase, epoch_loss))
             # print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
             # deep copy the model
-            # if phase == 'val' and epoch_acc > best_acc:
-            #     best_acc = epoch_acc
-            #     best_model_wts = copy.deepcopy(model.state_dict())
+            if phase == 'val' and epoch_acc > best_acc:
+                best_acc = epoch_acc
+                # best_model_wts = copy.deepcopy(model.state_dict())
+                best_model_wts = model.state_dict()
             # if phase == 'train':
             #     train_acc_history.append(epoch_acc)
             # if phase == 'val':
@@ -100,7 +103,7 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
     # print('Best val Acc: {:4f}'.format(best_acc))
 
     # save and load best model weights
-    # torch.save(best_model_wts, os.path.join(save_dir, 'weights_best_val_acc.pt'))
+    torch.save(best_model_wts, os.path.join(save_dir, 'weights_best_val_acc.pt'))
     # torch.save(model.state_dict(), os.path.join(save_dir, 'weights_last.pt'.format(epoch)))
     # model.load_state_dict(best_model_wts)
     return model, val_acc_history, train_acc_history
@@ -110,12 +113,22 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
 if __name__ == '__main__':
     root = os.getcwd()
     vid_dir = osp.join(root, "data/tiny_test")
+    save_dir = osp.join(root, "save")
 
+    # normalize
     # transform = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
     #                                                 std=[0.299, 0.224, 0.225])
     # dataset = Videos(vid_dir, transform=transform)
 
-    dataset = Videos(vid_dir)
+    # not normalized
+    # dataset = Videos(vid_dir)
+
+    # scaled
+    transform = lambda a: a/255.0
+    dataset = Videos(vid_dir, transform=transform)
+
+    # scale to 0-1 ?
+    
 
     split_dataset = torch.utils.data.random_split(dataset, [0.6, 0.2, 0.2])
     splits = ['train', 'validate', 'test']
@@ -126,29 +139,32 @@ if __name__ == '__main__':
 
     model = Net()
 
-    # train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=25)
+    num_epochs = 50
+    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=num_epochs, save_dir=save_dir)
 
-    fullname = osp.join(root, "data/raw_videos/54530924.mp4")
-    capture = cv2.VideoCapture(fullname)
+    # run it on one video:
+    # fullname = osp.join(root, "data/raw_videos/54530924.mp4")
+    # capture = cv2.VideoCapture(fullname)
 
-    n = 0
-    frames = []
-    while True:
-        successful, next_frame = capture.read()
-        if not successful:
-            # No more frames to read
-            print("Processed %d frames" % n)
-            break
-        frames.append(next_frame)
-        n += 1
-    capture.release()
+    # n = 0
+    # frames = []
+    # while True:
+    #     successful, next_frame = capture.read()
+    #     if not successful:
+    #         # No more frames to read
+    #         print("Processed %d frames" % n)
+    #         break
+    #     frames.append(next_frame)
+    #     n += 1
+    # capture.release()
 
-    frames = np.array(frames)
-    print(frames.shape)
-    downsampled_frames = downsample(frames)
+    # frames = np.array(frames)
+    # print(frames.shape)
+    # downsampled_frames = downsample(frames)
 
-    print(frames.shape, downsampled_frames.shape)
+    # print(frames.shape, downsampled_frames.shape)
 
+    # plot things: 
     # plt.figure(figsize=(5,10))
     # num_tests = 5
     # for i in range(num_tests):
@@ -168,4 +184,28 @@ if __name__ == '__main__':
     #     plt.imshow(orig[0,0,0,:,:].detach())
     #     plt.colorbar()
     # plt.show()
+
+    plt.figure(figsize=(5,8))
+    num_tests = 5
+    for i in range(num_tests):
+        down, orig = next(iter(dataloader_dict['test']))
+        plt.subplot(num_tests, 3, 3*i + 1)
+        plt.title("downsized input")
+        upscaled_down = down * 255
+        plt.imshow(upscaled_down[0,0,0,:,:].detach())
+        plt.colorbar()
+
+        plt.subplot(num_tests, 3, 3*i + 2)
+        plt.title("inferred")
+        # upscale = model(down)
+        upscaled_inferred = 255*model(down)
+        plt.imshow(upscaled_inferred[0,0,0,:,:].detach())
+        plt.colorbar()
+
+        plt.subplot(num_tests, 3, 3*i + 3)
+        plt.title("original")
+        upscaled_orig = 255*orig
+        plt.imshow(upscaled_orig[0,0,0,:,:].detach())
+        plt.colorbar()
+    plt.show()
     
