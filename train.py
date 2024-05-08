@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
     model = Net()
 
-    # train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=25)
+    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=50)
 
     fullname = osp.join(root, "data/raw_videos/54530924.mp4")
     capture = cv2.VideoCapture(fullname)
@@ -143,29 +143,45 @@ if __name__ == '__main__':
         n += 1
     capture.release()
 
-    frames = np.array(frames)
-    print(frames.shape)
-    downsampled_frames = downsample(frames)
+    original = torch.from_numpy(np.array(frames)).float()
+    downsampled = downsample(original)
 
-    print(frames.shape, downsampled_frames.shape)
+    downsampled = torch.einsum('ijkl -> lijk', downsampled)[None, :, :, :, :]
+    original = torch.einsum('ijkl -> lijk', original)[None, :, :, :, :]
 
-    # plt.figure(figsize=(5,10))
-    # num_tests = 5
-    # for i in range(num_tests):
-    #     down, orig = next(iter(dataloader_dict['test']))
-    #     plt.subplot(num_tests, 3, 3*i + 1)
-    #     plt.title("downsized input")
-    #     plt.imshow(down[0,0,0,:,:].detach())
-    #     plt.colorbar()
+    output = torch.einsum('ijklm -> klmj', original).detach().numpy()
+    print(output)
+    print(original)
+    frames, height, width, channels = output.shape
 
-    #     plt.subplot(num_tests, 3, 3*i + 2)
-    #     plt.title("inferred")
-    #     plt.imshow(model(down)[0,0,0,:,:].detach())
-    #     plt.colorbar()
+    output_size = (width, height)
+    output_path = 'data/output.mp4'
+    output_format = cv2.VideoWriter_fourcc('M','P','4','V')
+    output_fps = 30
+    output_video = cv2.VideoWriter(output_path, output_format, output_fps, output_size)
 
-    #     plt.subplot(num_tests, 3, 3*i + 3)
-    #     plt.title("original")
-    #     plt.imshow(orig[0,0,0,:,:].detach())
-    #     plt.colorbar()
-    # plt.show()
+    for frame in output:
+        output_video.write(np.uint8(frame))
+
+    output_video.release()
+
+    plt.figure(figsize=(5,10))
+    num_tests = 5
+    for i in range(num_tests):
+        down, orig = next(iter(dataloader_dict['test']))
+        plt.subplot(num_tests, 3, 3*i + 1)
+        plt.title("downsized input")
+        plt.imshow(down[0,0,0,:,:].detach())
+        plt.colorbar()
+
+        plt.subplot(num_tests, 3, 3*i + 2)
+        plt.title("inferred")
+        plt.imshow(model(down)[0,0,0,:,:].detach())
+        plt.colorbar()
+
+        plt.subplot(num_tests, 3, 3*i + 3)
+        plt.title("original")
+        plt.imshow(orig[0,0,0,:,:].detach())
+        plt.colorbar()
+    plt.show()
     
