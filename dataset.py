@@ -31,7 +31,7 @@ class Videos(torch.utils.data.Dataset):
 
     @property
     def raw_videos(self) -> List[str]:
-        filenames = [fn for fn in os.listdir(self.root) if osp.isfile(osp.join(self.root, fn))]
+        filenames = [fn for fn in os.listdir(self.root) if not fn.startswith('.') and osp.isfile(osp.join(self.root, fn))]
         return filenames
 
     def __getitem__(self, idx: int):
