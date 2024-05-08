@@ -99,8 +99,8 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
     print('Best val Acc: {:4f}'.format(best_acc))
 
     # save and load best model weights
-    torch.save(best_model_wts, os.path.join(save_dir, 'weights_best_val_acc.pt'))
-    torch.save(model.state_dict(), os.path.join(save_dir, 'weights_last.pt'.format(epoch)))
+    # torch.save(best_model_wts, os.path.join(save_dir, 'weights_best_val_acc.pt'))
+    # torch.save(model.state_dict(), os.path.join(save_dir, 'weights_last.pt'.format(epoch)))
     model.load_state_dict(best_model_wts)
     return model, val_acc_history, train_acc_history
 
@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
     model = Net()
 
-    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=1)
+    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=2)
 
     # down, orig = dataset[0]
 
