@@ -126,9 +126,9 @@ if __name__ == '__main__':
 
     model = Net()
 
-    # train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=25)
+    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=25)
 
-    fullname = osp.join(root, "data/raw_videos/54530924.mp4")
+    fullname = osp.join(root, "data/video.mov")
     capture = cv2.VideoCapture(fullname)
 
     n = 0
@@ -149,23 +149,23 @@ if __name__ == '__main__':
 
     print(frames.shape, downsampled_frames.shape)
 
-    # plt.figure(figsize=(5,10))
-    # num_tests = 5
-    # for i in range(num_tests):
-    #     down, orig = next(iter(dataloader_dict['test']))
-    #     plt.subplot(num_tests, 3, 3*i + 1)
-    #     plt.title("downsized input")
-    #     plt.imshow(down[0,0,0,:,:].detach())
-    #     plt.colorbar()
+    plt.figure(figsize=(5,8))
+    num_tests = 5
+    for i in range(num_tests):
+        down, orig = next(iter(dataloader_dict['test']))
+        plt.subplot(num_tests, 3, 3*i + 1)
+        plt.title("downsized input")
+        plt.imshow(down[0,0,0,:,:].detach())
+        plt.colorbar()
 
-    #     plt.subplot(num_tests, 3, 3*i + 2)
-    #     plt.title("inferred")
-    #     plt.imshow(model(down)[0,0,0,:,:].detach())
-    #     plt.colorbar()
+        plt.subplot(num_tests, 3, 3*i + 2)
+        plt.title("inferred")
+        plt.imshow(model(down)[0,0,0,:,:].detach())
+        plt.colorbar()
 
-    #     plt.subplot(num_tests, 3, 3*i + 3)
-    #     plt.title("original")
-    #     plt.imshow(orig[0,0,0,:,:].detach())
-    #     plt.colorbar()
-    # plt.show()
+        plt.subplot(num_tests, 3, 3*i + 3)
+        plt.title("original")
+        plt.imshow(orig[0,0,0,:,:].detach())
+        plt.colorbar()
+    plt.show()
     
