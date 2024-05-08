@@ -9,6 +9,7 @@ import torch
 import copy
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import torch.nn as nn
 
 def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_all_epochs=False, num_epochs=25):
     '''
@@ -126,7 +127,14 @@ if __name__ == '__main__':
 
     model = Net()
 
-    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=25)
+    def init_weights(m):
+        if isinstance(m, nn.Linear):
+            torch.nn.init.kaiming_normal_(m.weight)
+            m.bias.data.fill_(0)
+
+    model.apply(init_weights)
+
+    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=10)
 
     fullname = osp.join(root, "data/video.mov")
     capture = cv2.VideoCapture(fullname)
@@ -151,21 +159,31 @@ if __name__ == '__main__':
 
     plt.figure(figsize=(5,8))
     num_tests = 5
+    aaa = iter(dataloader_dict['test'])
     for i in range(num_tests):
-        down, orig = next(iter(dataloader_dict['test']))
+        down, orig = next(aaa)
         plt.subplot(num_tests, 3, 3*i + 1)
         plt.title("downsized input")
-        plt.imshow(down[0,0,0,:,:].detach())
+        downed = down[0,:,0,:,:].detach() / 255
+        downed = torch.einsum('ijk -> jki', downed)
+        if i == 4: print(downed[10, :, :])
+        plt.imshow(downed)
         plt.colorbar()
 
         plt.subplot(num_tests, 3, 3*i + 2)
         plt.title("inferred")
-        plt.imshow(model(down)[0,0,0,:,:].detach())
+        inferred = model(down)[0,:,0,:,:].detach() / 255
+        inferred = torch.einsum('ijk -> jki', inferred)
+        if i == 4: print(inferred[10, :, :])
+        plt.imshow(inferred)
         plt.colorbar()
 
         plt.subplot(num_tests, 3, 3*i + 3)
         plt.title("original")
-        plt.imshow(orig[0,0,0,:,:].detach())
+        origed = orig[0,:,0,:,:].detach() / 255
+        origed = torch.einsum('ijk -> jki', origed)
+        if i == 4: print(origed[10,:, :])
+        plt.imshow(origed)
         plt.colorbar()
     plt.show()
     
