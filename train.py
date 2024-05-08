@@ -129,6 +129,7 @@ if __name__ == '__main__':
 
     def init_weights(m):
         if isinstance(m, nn.Linear):
+            print(m.weight)
             torch.nn.init.kaiming_normal_(m.weight)
             m.bias.data.fill_(1)
 
@@ -158,7 +159,7 @@ if __name__ == '__main__':
     print(frames.shape, downsampled_frames.shape)
 
     plt.figure(figsize=(5,8))
-    num_tests = 5
+    num_tests = 3
     aaa = iter(dataloader_dict['test'])
     for i in range(num_tests):
         down, orig = next(aaa)
