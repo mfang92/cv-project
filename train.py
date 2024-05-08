@@ -126,9 +126,9 @@ if __name__ == '__main__':
 
     model = Net()
 
-    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=50)
+    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=5)
 
-    fullname = osp.join(root, "data/raw_videos/54530924.mp4")
+    fullname = osp.join(root, "data/video.mov")
     capture = cv2.VideoCapture(fullname)
 
     n = 0
@@ -147,9 +147,9 @@ if __name__ == '__main__':
     downsampled = downsample(original)
 
     downsampled = torch.einsum('ijkl -> lijk', downsampled)[None, :, :, :, :]
-    original = torch.einsum('ijkl -> lijk', original)[None, :, :, :, :]
+    # original = torch.einsum('ijkl -> lijk', original)[None, :, :, :, :]
 
-    output = torch.einsum('ijklm -> klmj', original).detach().numpy()
+    output = torch.einsum('ijklm -> klmj', model(downsampled)).detach().numpy()
     print(output)
     print(original)
     frames, height, width, channels = output.shape

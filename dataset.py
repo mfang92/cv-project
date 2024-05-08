@@ -16,7 +16,10 @@ def downsample(vid, factor=2, sigma = 9):
     downsized_frames = []
 
     for i in range(frames):
-        frame = vid[i].numpy()
+        if torch.is_tensor(vid[i]):
+            frame = vid[i].numpy()
+        else:
+            frame = np.array(vid[i])
 
         output_frame = downsize_frame(frame, factor=factor, sigma = sigma)
         downsized_frames.append(output_frame)
