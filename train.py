@@ -130,11 +130,11 @@ if __name__ == '__main__':
     def init_weights(m):
         if isinstance(m, nn.Linear):
             torch.nn.init.kaiming_normal_(m.weight)
-            m.bias.data.fill_(0)
+            m.bias.data.fill_(1)
 
     model.apply(init_weights)
 
-    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=10)
+    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=20)
 
     fullname = osp.join(root, "data/video.mov")
     capture = cv2.VideoCapture(fullname)
@@ -166,7 +166,7 @@ if __name__ == '__main__':
         plt.title("downsized input")
         downed = down[0,:,0,:,:].detach() / 255
         downed = torch.einsum('ijk -> jki', downed)
-        if i == 4: print(downed[10, :, :])
+        # if i == 4: print(downed[10, :, :])
         plt.imshow(downed)
         plt.colorbar()
 
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         plt.title("inferred")
         inferred = model(down)[0,:,0,:,:].detach() / 255
         inferred = torch.einsum('ijk -> jki', inferred)
-        if i == 4: print(inferred[10, :, :])
+        # if i == 4: print(inferred[10, :, :])
         plt.imshow(inferred)
         plt.colorbar()
 
@@ -182,7 +182,7 @@ if __name__ == '__main__':
         plt.title("original")
         origed = orig[0,:,0,:,:].detach() / 255
         origed = torch.einsum('ijk -> jki', origed)
-        if i == 4: print(origed[10,:, :])
+        # if i == 4: print(origed[10,:, :])
         plt.imshow(origed)
         plt.colorbar()
     plt.show()

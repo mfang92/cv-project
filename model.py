@@ -10,6 +10,9 @@ class Net(nn.Module):
         self.conv3 = nn.Conv3d(3, 3, (1, 3, 3), padding=(0, 1, 1))
         self.conv4 = nn.Conv3d(3, 3, (3, 1, 1), padding=(1, 0, 0))
 
+        self.conv5 = nn.Conv3d(3, 3, (1, 3, 3), padding=(0, 1, 1))
+        self.conv6 = nn.Conv3d(3, 3, (3, 1, 1), padding=(1, 0, 0))
+
         self.upsample = nn.Upsample(scale_factor=(1, 2, 2), mode='trilinear')
 
     def forward(self, x):
@@ -18,6 +21,8 @@ class Net(nn.Module):
         x = self.upsample(x)
         x = F.relu(self.conv3(x))
         x = F.relu(self.conv4(x))
+        x = F.relu(self.conv5(x))
+        x = F.relu(self.conv6(x))
         return x
 
 if __name__ == "__main__":
