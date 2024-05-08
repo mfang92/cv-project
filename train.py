@@ -127,6 +127,7 @@ if __name__ == '__main__':
 
     model = Net()
 
+<<<<<<< HEAD
     def init_weights(m):
         if isinstance(m, nn.Linear):
             print(m.weight)
@@ -136,6 +137,11 @@ if __name__ == '__main__':
     model.apply(init_weights)
 
     train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=20)
+||||||| e11075f
+    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=25)
+=======
+    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=5)
+>>>>>>> 28ad597bb64c23b2baf9e9054eb3ef490b4e93fd
 
     fullname = osp.join(root, "data/video.mov")
     capture = cv2.VideoCapture(fullname)
@@ -152,15 +158,32 @@ if __name__ == '__main__':
         n += 1
     capture.release()
 
-    frames = np.array(frames)
-    print(frames.shape)
-    downsampled_frames = downsample(frames)
+    original = torch.from_numpy(np.array(frames)).float()
+    downsampled = downsample(original)
 
-    print(frames.shape, downsampled_frames.shape)
+    downsampled = torch.einsum('ijkl -> lijk', downsampled)[None, :, :, :, :]
+    # original = torch.einsum('ijkl -> lijk', original)[None, :, :, :, :]
 
     plt.figure(figsize=(5,8))
     num_tests = 3
     aaa = iter(dataloader_dict['test'])
+
+    # output = torch.einsum('ijklm -> klmj', model(downsampled)).detach().numpy()
+    # print(output)
+    # print(original)
+    # frames, height, width, channels = output.shape
+
+    # output_size = (width, height)
+    # output_path = 'data/output.mp4'
+    # output_format = cv2.VideoWriter_fourcc('M','P','4','V')
+    # output_fps = 30
+    # output_video = cv2.VideoWriter(output_path, output_format, output_fps, output_size)
+
+    # for frame in output:
+    #     output_video.write(np.uint8(frame))
+
+    # output_video.release()
+
     for i in range(num_tests):
         down, orig = next(aaa)
         plt.subplot(num_tests, 3, 3*i + 1)
