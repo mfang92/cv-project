@@ -158,26 +158,26 @@ if __name__ == '__main__':
     #     n += 1
     # capture.release()
 
-    original = torch.from_numpy(np.array(frames)[:20]).float().to(device)
-    original = torch.einsum('ijkl -> lijk', original)
+    # original = torch.from_numpy(np.array(frames)[:20]).float().to(device)
+    # original = torch.einsum('ijkl -> lijk', original)
 
-    downsampled = downsample(original)[None, :, :, :, :]
+    # downsampled = downsample(original)[None, :, :, :, :]
 
-    output = torch.einsum('ijklm -> klmj', model(downsampled)).detach().cpu().numpy()
-    print(output)
-    print(original)
-    frames, height, width, channels = output.shape
+    # output = torch.einsum('ijklm -> klmj', model(downsampled)).detach().cpu().numpy()
+    # print(output)
+    # print(original)
+    # frames, height, width, channels = output.shape
 
-    output_size = (width, height)
-    output_path = 'data/output.mp4'
-    output_format = cv2.VideoWriter_fourcc('M','P','4','V')
-    output_fps = 30
-    output_video = cv2.VideoWriter(output_path, output_format, output_fps, output_size)
+    # output_size = (width, height)
+    # output_path = 'data/output.mp4'
+    # output_format = cv2.VideoWriter_fourcc('M','P','4','V')
+    # output_fps = 30
+    # output_video = cv2.VideoWriter(output_path, output_format, output_fps, output_size)
 
-    for frame in output:
-        output_video.write(np.uint8(frame))
+    # for frame in output:
+    #     output_video.write(np.uint8(frame))
 
-    output_video.release()
+    # output_video.release()
 
     
     # print("downsampled")
