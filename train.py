@@ -10,6 +10,10 @@ import copy
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import torch.nn as nn
+import cv2
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using {device} device")
 
 def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_all_epochs=False, num_epochs=25):
     '''
@@ -52,8 +56,8 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
             # TQDM has nice progress bars
             for idx, data in enumerate(tqdm(dataloaders[phase])):
                 inputs, labels = data
-                # inputs = inputs.to(device)
-                # labels = labels.to(device)
+                inputs = inputs.to(device)
+                labels = labels.to(device)
 
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -122,15 +126,12 @@ if __name__ == '__main__':
     splits = ['train', 'validate', 'test']
     dataset_dict = {splits[i]: split_dataset[i] for i in range(3)}
 
-    dataloader_dict = {x: torch.utils.data.DataLoader(dataset_dict[x], batch_size=4, shuffle=True) for x in splits}
-
-
-    model = Net()
-
+    dataloader_dict = {x: torch.utils.data.DataLoader(dataset_dict[x], batch_size=8, shuffle=True) for x in splits}
+    model = Net(device=device)
 
     def init_weights(m):
-        print("here")
         if isinstance(m, nn.Conv3d):
+            print(m.weight)
             torch.nn.init.kaiming_normal_(m.weight)
             m.bias.data.fill_(0)
     def printer(m):
@@ -140,16 +141,10 @@ if __name__ == '__main__':
 
     model.apply(init_weights)
 
-    m, val, tr = train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=20)
+    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=20)
 
-
-    # model.apply(printer)
-
-    plt.plot(range(20), val)
-    plt.show()
-
-    # fullname = osp.join(root, "data/video.mov")
-    # capture = cv2.VideoCapture(fullname)
+    fullname = osp.join(root, "data/raw_videos/54530924.mp4")
+    capture = cv2.VideoCapture(fullname)
 
     # n = 0
     # frames = []
@@ -163,11 +158,26 @@ if __name__ == '__main__':
     #     n += 1
     # capture.release()
 
-    # original = torch.from_numpy(np.array(frames)).float()
-    # downsampled = downsample(original)
+    original = torch.from_numpy(np.array(frames)[:20]).float().to(device)
+    original = torch.einsum('ijkl -> lijk', original)
 
-    # downsampled = torch.einsum('ijkl -> lijk', downsampled)[None, :, :, :, :]
-    # original = torch.einsum('ijkl -> lijk', original)[None, :, :, :, :]
+    downsampled = downsample(original)[None, :, :, :, :]
+
+    output = torch.einsum('ijklm -> klmj', model(downsampled)).detach().cpu().numpy()
+    print(output)
+    print(original)
+    frames, height, width, channels = output.shape
+
+    output_size = (width, height)
+    output_path = 'data/output.mp4'
+    output_format = cv2.VideoWriter_fourcc('M','P','4','V')
+    output_fps = 30
+    output_video = cv2.VideoWriter(output_path, output_format, output_fps, output_size)
+
+    for frame in output:
+        output_video.write(np.uint8(frame))
+
+    output_video.release()
 
     
     # print("downsampled")
@@ -195,10 +205,13 @@ if __name__ == '__main__':
 
     for i in range(num_tests):
         down, orig = next(aaa)
+        down = down.to(device)
+        orig = orig.to(device)
+
         plt.subplot(num_tests, 3, 3*i + 1)
         plt.title("downsized input")
         downed = down[0,:,0,:,:].detach() / 255
-        downed = torch.einsum('ijk -> jki', downed)
+        downed = torch.einsum('ijk -> jki', downed).cpu()
         # if i == 4: print(downed[10, :, :])
         plt.imshow(downed)
         plt.colorbar()
@@ -206,7 +219,7 @@ if __name__ == '__main__':
         plt.subplot(num_tests, 3, 3*i + 2)
         plt.title("inferred")
         inferred = model(down)[0,:,0,:,:].detach() / 255
-        inferred = torch.einsum('ijk -> jki', inferred)
+        inferred = torch.einsum('ijk -> jki', inferred).cpu()
         # if i == 4: print(inferred[10, :, :])
         plt.imshow(inferred)
         plt.colorbar()
@@ -214,7 +227,7 @@ if __name__ == '__main__':
         plt.subplot(num_tests, 3, 3*i + 3)
         plt.title("original")
         origed = orig[0,:,0,:,:].detach() / 255
-        origed = torch.einsum('ijk -> jki', origed)
+        origed = torch.einsum('ijk -> jki', origed).cpu()
         # if i == 4: print(origed[10,:, :])
         plt.imshow(origed)
         plt.colorbar()

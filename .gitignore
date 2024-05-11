@@ -1,2 +1,4 @@
 /data/raw_videos
 /data/tiny
+/data/tiny_test
+__pycache__
