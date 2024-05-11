@@ -91,8 +91,8 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
             #     best_model_wts = copy.deepcopy(model.state_dict())
             # if phase == 'train':
             #     train_acc_history.append(epoch_acc)
-            # if phase == 'val':
-            #     val_acc_history.append(epoch_acc)
+            if phase == 'validate':
+                val_acc_history.append(epoch_loss)
             # if save_all_epochs:
             #     torch.save(model.state_dict(), os.path.join(save_dir, f'weights_{epoch}.pt'))
 
@@ -127,46 +127,51 @@ if __name__ == '__main__':
 
     model = Net()
 
-<<<<<<< HEAD
+
     def init_weights(m):
-        if isinstance(m, nn.Linear):
-            print(m.weight)
+        print("here")
+        if isinstance(m, nn.Conv3d):
             torch.nn.init.kaiming_normal_(m.weight)
-            m.bias.data.fill_(1)
+            m.bias.data.fill_(0)
+    def printer(m):
+        print("aaa")
+        if isinstance(m, nn.Conv3d):
+            print(m.weight)
 
     model.apply(init_weights)
 
-    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=20)
-||||||| e11075f
-    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=25)
-=======
-    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=5)
->>>>>>> 28ad597bb64c23b2baf9e9054eb3ef490b4e93fd
+    m, val, tr = train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=20)
 
-    fullname = osp.join(root, "data/video.mov")
-    capture = cv2.VideoCapture(fullname)
 
-    n = 0
-    frames = []
-    while True:
-        successful, next_frame = capture.read()
-        if not successful:
-            # No more frames to read
-            print("Processed %d frames" % n)
-            break
-        frames.append(next_frame)
-        n += 1
-    capture.release()
+    # model.apply(printer)
 
-    original = torch.from_numpy(np.array(frames)).float()
-    downsampled = downsample(original)
+    plt.plot(range(20), val)
+    plt.show()
 
-    downsampled = torch.einsum('ijkl -> lijk', downsampled)[None, :, :, :, :]
+    # fullname = osp.join(root, "data/video.mov")
+    # capture = cv2.VideoCapture(fullname)
+
+    # n = 0
+    # frames = []
+    # while True:
+    #     successful, next_frame = capture.read()
+    #     if not successful:
+    #         # No more frames to read
+    #         print("Processed %d frames" % n)
+    #         break
+    #     frames.append(next_frame)
+    #     n += 1
+    # capture.release()
+
+    # original = torch.from_numpy(np.array(frames)).float()
+    # downsampled = downsample(original)
+
+    # downsampled = torch.einsum('ijkl -> lijk', downsampled)[None, :, :, :, :]
     # original = torch.einsum('ijkl -> lijk', original)[None, :, :, :, :]
 
-    plt.figure(figsize=(5,8))
-    num_tests = 3
-    aaa = iter(dataloader_dict['test'])
+    
+    # print("downsampled")
+    # downsampled = downsampled[:,:,:20,:,:]
 
     # output = torch.einsum('ijklm -> klmj', model(downsampled)).detach().numpy()
     # print(output)
@@ -179,10 +184,14 @@ if __name__ == '__main__':
     # output_fps = 30
     # output_video = cv2.VideoWriter(output_path, output_format, output_fps, output_size)
 
-    # for frame in output:
+    # for frame in tqdm(output):
     #     output_video.write(np.uint8(frame))
 
     # output_video.release()
+
+    num_tests = 3
+    aaa = iter(dataloader_dict['test'])
+    plt.figure(figsize=(5,8))
 
     for i in range(num_tests):
         down, orig = next(aaa)
