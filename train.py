@@ -32,11 +32,8 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
     '''
     since = time.time()
 
-    val_acc_history = []
-    train_acc_history = []
-
-    best_model_wts = copy.deepcopy(model.state_dict())
-    best_acc = 0.0
+    val_loss_history = []
+    train_loss_history = []
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch + 1, num_epochs))
@@ -69,11 +66,6 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
                     outputs = model(inputs)
                     loss = criterion(outputs, labels)
 
-                    # torch.max outputs the maximum value, and its index
-                    # Since the input is batched, we take the max along axis 1
-                    # (the meaningful outputs)
-                    _, preds = torch.max(outputs, 1)
-
                     # backprop + optimize only if in training phase
                     if phase == 'train':
                         loss.backward()
@@ -84,31 +76,16 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
                 running_corrects += torch.sum(loss)
 
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
-            # epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
-
             print('{} Loss: {:.4f}'.format(phase, epoch_loss))
-            # print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
-            # deep copy the model
-            # if phase == 'val' and epoch_acc > best_acc:
-            #     best_acc = epoch_acc
-            #     best_model_wts = copy.deepcopy(model.state_dict())
-            # if phase == 'train':
-            #     train_acc_history.append(epoch_acc)
+            if phase == 'train':
+                train_loss_history.append(epoch_loss)
             if phase == 'validate':
-                val_acc_history.append(epoch_loss)
-            # if save_all_epochs:
-            #     torch.save(model.state_dict(), os.path.join(save_dir, f'weights_{epoch}.pt'))
+                val_loss_history.append(epoch_loss)
 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
-    # print('Best val Acc: {:4f}'.format(best_acc))
-
-    # save and load best model weights
-    # torch.save(best_model_wts, os.path.join(save_dir, 'weights_best_val_acc.pt'))
-    # torch.save(model.state_dict(), os.path.join(save_dir, 'weights_last.pt'.format(epoch)))
-    # model.load_state_dict(best_model_wts)
-    return model, val_acc_history, train_acc_history
+    return model, val_loss_history, train_loss_history
 
 
 
