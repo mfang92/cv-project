@@ -7,10 +7,10 @@ import time
 import torchvision
 import torch
 import copy
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from tqdm import tqdm
 import torch.nn as nn
-import cv2
+# import cv2
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using {device} device")
@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
     def init_weights(m):
         if isinstance(m, nn.Conv3d):
-            print(m.weight)
+            # print(m.weight)
             torch.nn.init.kaiming_normal_(m.weight)
             m.bias.data.fill_(0)
     def printer(m):
@@ -143,8 +143,8 @@ if __name__ == '__main__':
 
     train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=20)
 
-    fullname = osp.join(root, "data/raw_videos/54530924.mp4")
-    capture = cv2.VideoCapture(fullname)
+    # fullname = osp.join(root, "data/raw_videos/54530924.mp4")
+    # capture = cv2.VideoCapture(fullname)
 
     # n = 0
     # frames = []
@@ -199,37 +199,37 @@ if __name__ == '__main__':
 
     # output_video.release()
 
-    num_tests = 3
-    aaa = iter(dataloader_dict['test'])
-    plt.figure(figsize=(5,8))
+    # num_tests = 3
+    # aaa = iter(dataloader_dict['test'])
+    # plt.figure(figsize=(5,8))
 
-    for i in range(num_tests):
-        down, orig = next(aaa)
-        down = down.to(device)
-        orig = orig.to(device)
+    # for i in range(num_tests):
+    #     down, orig = next(aaa)
+    #     down = down.to(device)
+    #     orig = orig.to(device)
 
-        plt.subplot(num_tests, 3, 3*i + 1)
-        plt.title("downsized input")
-        downed = down[0,:,0,:,:].detach() / 255
-        downed = torch.einsum('ijk -> jki', downed).cpu()
-        # if i == 4: print(downed[10, :, :])
-        plt.imshow(downed)
-        plt.colorbar()
+    #     plt.subplot(num_tests, 3, 3*i + 1)
+    #     plt.title("downsized input")
+    #     downed = down[0,:,0,:,:].detach() / 255
+    #     downed = torch.einsum('ijk -> jki', downed).cpu()
+    #     # if i == 4: print(downed[10, :, :])
+    #     plt.imshow(downed)
+    #     plt.colorbar()
 
-        plt.subplot(num_tests, 3, 3*i + 2)
-        plt.title("inferred")
-        inferred = model(down)[0,:,0,:,:].detach() / 255
-        inferred = torch.einsum('ijk -> jki', inferred).cpu()
-        # if i == 4: print(inferred[10, :, :])
-        plt.imshow(inferred)
-        plt.colorbar()
+    #     plt.subplot(num_tests, 3, 3*i + 2)
+    #     plt.title("inferred")
+    #     inferred = model(down)[0,:,0,:,:].detach() / 255
+    #     inferred = torch.einsum('ijk -> jki', inferred).cpu()
+    #     # if i == 4: print(inferred[10, :, :])
+    #     plt.imshow(inferred)
+    #     plt.colorbar()
 
-        plt.subplot(num_tests, 3, 3*i + 3)
-        plt.title("original")
-        origed = orig[0,:,0,:,:].detach() / 255
-        origed = torch.einsum('ijk -> jki', origed).cpu()
-        # if i == 4: print(origed[10,:, :])
-        plt.imshow(origed)
-        plt.colorbar()
-    plt.show()
+    #     plt.subplot(num_tests, 3, 3*i + 3)
+    #     plt.title("original")
+    #     origed = orig[0,:,0,:,:].detach() / 255
+    #     origed = torch.einsum('ijk -> jki', origed).cpu()
+    #     # if i == 4: print(origed[10,:, :])
+    #     plt.imshow(origed)
+    #     plt.colorbar()
+    # plt.show()
     

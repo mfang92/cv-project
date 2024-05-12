@@ -24,14 +24,18 @@ def downsample(vid, factor=2, sigma = 9):
     return downsized_frames
     
 class Videos(torch.utils.data.Dataset):
-    def __init__(self, root: str, transform=None):
+    def __init__(self, root: str, transform=None, size_lim=None):
         self.root = root
         self.transform = transform
+        self.size_lim=size_lim
 
     @property
     def raw_videos(self) -> List[str]:
         filenames = [fn for fn in os.listdir(self.root) if not fn.startswith('.') and osp.isfile(osp.join(self.root, fn))]
-        return filenames
+        if self.size_lim==None:
+            return filenames
+        else:
+            return filenames[:self.size_lim]
 
     def __getitem__(self, idx: int):
         fn = self.raw_videos[idx]
