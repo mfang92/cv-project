@@ -29,10 +29,10 @@ ml_image = (
 
 
 @app.function(image=ml_image,
-              mounts = [modal.Mount.from_local_dir(cwd, remote_path="/root")], gpu="H100")
+              mounts = [modal.Mount.from_local_dir(cwd, remote_path="/root")], gpu="h100")
 def model_run():
     root = os.getcwd()
-    vid_dir = osp.join(root, "tiny")
+    vid_dir = osp.join(root, "data/tiny_test")
     device = ("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using {device} device")
     print(sys.executable)
@@ -64,7 +64,7 @@ def model_run():
     # torch.save(best_model_wts, os.path.join(save_dir, 'weights_best_val_acc.pt'))
 
 
-    return model.state_dict()
+    return model.to("cpu").state_dict()
 
 
 @app.local_entrypoint()
