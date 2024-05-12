@@ -15,7 +15,7 @@ class CustomDataset(torch.utils.data.Dataset):
     
     @property
     def fn_list(self) -> List[str]:
-        filenames = [fn for fn in os.listdir(self.img_dir) if not fn.startswith('.') and osp.isfile(osp.join(self.root, fn))]
+        filenames = [fn for fn in os.listdir(self.img_dir) if not fn.startswith('.') and osp.isfile(osp.join(self.img_dir, fn))]
         if self.size_lim==None:
             return filenames
         else:
@@ -25,7 +25,7 @@ class CustomDataset(torch.utils.data.Dataset):
         return len(self.fn_list)
 
     def __getitem__(self, idx):
-        file_path = os.path.join(self.img_dir, self.fn_list[idx, 0])
+        file_path = os.path.join(self.img_dir, self.fn_list[idx])
 
         data = self.read_data(file_path)
         target = data
