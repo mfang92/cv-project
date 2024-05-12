@@ -1,6 +1,4 @@
-# from model import Net
-# from model_upsample_then_cnn import Net
-from dummymodel import Net
+from model import Net
 from dataset import *
 
 import os
@@ -155,7 +153,7 @@ if __name__ == '__main__':
     capture.release()
 
     original = torch.from_numpy(np.array(frames)).float()
-    downsampled = downsample(original) # frames, h, w, channels
+    downsampled = downsample(original)
 
     downsampled = torch.einsum('ijkl -> lijk', downsampled)[None, :, :, :, :]
     # original = torch.einsum('ijkl -> lijk', original)[None, :, :, :, :]
