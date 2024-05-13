@@ -56,7 +56,11 @@ def model_run(data_dir, model_ind, size_lim, num_epochs, batch_size, num_workers
             m.bias.data.fill_(0)
     model.apply(init_weights)
 
-    _, val_loss, train_loss = train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=num_epochs)
+    _, val_loss, train_loss = train_model(model,
+                                          dataloader_dict,
+                                          lambda input, target: torch.nn.MSELoss()(input[:, :, :, 8:92, 8:92], target[:, :, :, 8:92, 8:92]),
+                                          torch.optim.Adam(model.parameters()),
+                                          num_epochs=num_epochs)
 
     # model_ft.load_state_dict(torch.load(resume_from))
     # torch.save(best_model_wts, os.path.join(save_dir, 'weights_best_val_acc.pt'))
