@@ -120,7 +120,7 @@ if __name__ == '__main__':
 
     train_model(model, 
                 dataloader_dict, 
-                lambda input, target: torch.nn.MSELoss()(input[:, :, :, 4:96, 4:96], target[:, :, :, 4:96, 4:96]), 
+                lambda input, target: torch.nn.MSELoss()(input[:, :, :, 8:92, 8:92], target[:, :, :, 8:92, 8:92]), 
                 torch.optim.Adam(model.parameters()), 
                 num_epochs=20)
 

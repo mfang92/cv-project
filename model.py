@@ -16,6 +16,8 @@ class Net(nn.Module):
         self.conv7 = nn.Conv3d(3, 3, (1, 3, 3), padding=(0, 1, 1), device=device)
         self.conv8 = nn.Conv3d(3, 3, (3, 1, 1), padding=(1, 0, 0), device=device)
 
+        self.convs = [self.conv1, self.conv2, self.conv3, self.conv4, self.conv5, self.conv6, self.conv7, self.conv8, lambda x: x]
+
         self.upsample = nn.Upsample(scale_factor=(1, 2, 2), mode='trilinear')
 
     def forward(self, x):
@@ -30,6 +32,19 @@ class Net(nn.Module):
         x = F.relu(self.conv7(x))
         x = F.relu(self.conv8(x))
 
+        return x
+
+class VaryNets(Net):
+    def __init__(self, device=None, placement = 4):
+        super().__init__(device=device)
+        self.placement = placement
+    
+    def forward(self, x):
+        for i in range(9):
+            if i != self.placement:
+                x = F.relu(self.convs[i](x))
+            else:
+                x = self.upsample(x)
         return x
 
 if __name__ == "__main__":
