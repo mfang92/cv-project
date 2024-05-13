@@ -1,4 +1,4 @@
-from model import Net
+from model import Net, VaryNets
 from dataset import *
 
 import os
@@ -103,8 +103,8 @@ if __name__ == '__main__':
     splits = ['train', 'validate', 'test']
     dataset_dict = {splits[i]: split_dataset[i] for i in range(3)}
 
-    dataloader_dict = {x: torch.utils.data.DataLoader(dataset_dict[x], batch_size=8, shuffle=True) for x in splits}
-    model = Net(device=device)
+    dataloader_dict = {x: torch.utils.data.DataLoader(dataset_dict[x], batch_size=16, shuffle=True) for x in splits}
+    model = VaryNets(device=device, placement=8, res_net=True)
 
     def init_weights(m):
         if isinstance(m, nn.Conv3d):
@@ -120,7 +120,7 @@ if __name__ == '__main__':
 
     train_model(model, 
                 dataloader_dict, 
-                lambda input, target: torch.nn.MSELoss()(input[:, :, :, 4:96, 4:96], target[:, :, :, 4:96, 4:96]), 
+                lambda input, target: torch.nn.MSELoss()(input[:, :, 4:6, 8:92, 8:92], target[:, :, 4:6, 8:92, 8:92]), 
                 torch.optim.Adam(model.parameters()), 
                 num_epochs=20)
 
