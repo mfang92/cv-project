@@ -14,9 +14,11 @@ from model import Net
 from train import train_model
 import sys
 from dataset import Videos
+import pathlib
 
 
 cwd = os.getcwd()
+p = pathlib.Path()
 
 app = modal.App(
     "example-get-started"
@@ -29,8 +31,10 @@ ml_image = (
 
 
 @app.function(image=ml_image,
-              mounts = [modal.Mount.from_local_dir(cwd, remote_path="/root")], gpu="h100")
-def model_run(data_dir, size_lim, num_epochs):
+              mounts = [modal.Mount.from_local_dir(cwd, remote_path="/root")],
+              gpu="h100:1",
+              volumes={"/my_vol": modal.Volume.from_name("data_tiny")})
+def model_run(data_dir, size_lim, num_epochs, batch_size, num_workers):
     device = ("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using {device} device")
 
@@ -41,7 +45,7 @@ def model_run(data_dir, size_lim, num_epochs):
     splits = ['train', 'validate', 'test']
     dataset_dict = {splits[i]: split_dataset[i] for i in range(3)}
 
-    dataloader_dict = {x: torch.utils.data.DataLoader(dataset_dict[x], batch_size=16, num_workers=4, shuffle=True) for x in splits}
+    dataloader_dict = {x: torch.utils.data.DataLoader(dataset_dict[x], batch_size=batch_size, num_workers=num_workers, shuffle=True) for x in splits}
 
     model = Net().to(device=device)
 
@@ -59,12 +63,20 @@ def model_run(data_dir, size_lim, num_epochs):
 
     return model.to("cpu").state_dict(), val_loss, train_loss
 
+@app.function(image=ml_image,
+              mounts = [modal.Mount.from_local_dir(cwd, remote_path="/root")],
+              gpu="h100",
+              volumes={"/my_vol": modal.Volume.from_name("data_tiny")})
+def volume_test():
+    print(os.listdir("/my_vol/tiny")[:100])
+
 
 @app.local_entrypoint()
 def main():
     save_dir="saved_model"
     model_name = "base_model"
-    state, val_loss, train_loss = model_run.remote("data/tiny_test", None, 20)
+    data_dir = "/my_vol/tiny"
+    state, val_loss, train_loss = model_run.remote(data_dir, size_lim=1000, num_epochs=20, batch_size=16, num_workers=5)
     print(f"Ran the function")
     torch.save(state, os.path.join(save_dir, f"{model_name}.pt"))
     val_loss = np.array(val_loss)

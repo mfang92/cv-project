@@ -19,7 +19,7 @@ class Net(nn.Module):
         self.upsample = nn.Upsample(scale_factor=(1, 2, 2), mode='trilinear')
 
     def forward(self, x):
-        identity = x.clone()
+        # identity = x.clone()
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
