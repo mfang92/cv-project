@@ -29,13 +29,11 @@ class Videos(torch.utils.data.Dataset):
         self.transform = transform
         self.size_lim=size_lim
 
-    @property
-    def raw_videos(self) -> List[str]:
-        filenames = [fn for fn in os.listdir(self.root) if not fn.startswith('.') and osp.isfile(osp.join(self.root, fn))]
+        filenames = np.random.permutation([fn for fn in os.listdir(self.root) if not fn.startswith('.') and osp.isfile(osp.join(self.root, fn))])
         if self.size_lim==None:
-            return filenames
+            self.raw_videos = filenames
         else:
-            return filenames[:self.size_lim]
+            self.raw_videos = filenames[:self.size_lim]
 
     def __getitem__(self, idx: int):
         fn = self.raw_videos[idx]
