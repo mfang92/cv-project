@@ -1,6 +1,5 @@
 import os
 import os.path as osp
-import pandas as pd
 from typing import List
 import torch
 
