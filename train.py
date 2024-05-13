@@ -118,7 +118,11 @@ if __name__ == '__main__':
 
     model.apply(init_weights)
 
-    train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=20)
+    train_model(model, 
+                dataloader_dict, 
+                lambda input, target: torch.nn.MSELoss()(input[:, :, :, 4:96, 4:96], target[:, :, :, 4:96, 4:96]), 
+                torch.optim.Adam(model.parameters()), 
+                num_epochs=20)
 
     # fullname = osp.join(root, "data/raw_videos/54530924.mp4")
     # capture = cv2.VideoCapture(fullname)

@@ -25,16 +25,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Net_2016(nn.Module):
-    def __init__(self):
+    def __init__(self, device = None):
         super().__init__()
-        self.upsample = nn.Upsample(scale_factor=(3, 3), mode='bicubic')
-
-        self.conv1 = nn.Conv3d(3, 64, (9, 9), padding=(0, 0))
-        self.conv2 = nn.Conv3d(64, 32, (1, 1), padding=(0, 0))
-        self.conv3 = nn.Conv3d(32, 3, (5, 5), padding=(0, 0))
+        self.conv1 = nn.Conv2d(3, 64, (9, 9), padding=(4, 4), device=device) # TODO: change padding
+        self.conv2 = nn.Conv2d(64, 32, (1, 1), padding=(0, 0), device=device)
+        self.conv3 = nn.Conv2d(32, 3, (5, 5), padding=(2, 2), device=device)
 
     def forward(self, x):
-        x = self.upsample(x)
+        # x = self.upsample(x)
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = self.conv3(x) # no ReLU on the third? apparently

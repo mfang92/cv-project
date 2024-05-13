@@ -33,7 +33,8 @@ ml_image = (
 @app.function(image=ml_image,
               mounts = [modal.Mount.from_local_dir(cwd, remote_path="/root")],
               gpu="h100:1",
-              volumes={"/my_vol": modal.Volume.from_name("data_tiny")})
+              volumes={"/my_vol": modal.Volume.from_name("data_tiny")},
+              timeout=1200)
 def model_run(data_dir, size_lim, num_epochs, batch_size, num_workers):
     device = ("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using {device} device")
@@ -61,14 +62,7 @@ def model_run(data_dir, size_lim, num_epochs, batch_size, num_workers):
     # torch.save(best_model_wts, os.path.join(save_dir, 'weights_best_val_acc.pt'))
 
 
-    return model.to("cpu").state_dict(), val_loss, train_loss
-
-@app.function(image=ml_image,
-              mounts = [modal.Mount.from_local_dir(cwd, remote_path="/root")],
-              gpu="h100",
-              volumes={"/my_vol": modal.Volume.from_name("data_tiny")})
-def volume_test():
-    print(os.listdir("/my_vol/tiny")[:100])
+    return model.state_dict(), val_loss, train_loss
 
 
 @app.local_entrypoint()
