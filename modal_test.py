@@ -16,10 +16,6 @@ import sys
 from dataset import Videos
 import pathlib
 
-
-cwd = os.getcwd()
-p = pathlib.Path()
-
 app = modal.App(
     "example-get-started"
 )  # Note: prior to April 2024, "app" was called "stub"
@@ -31,11 +27,10 @@ ml_image = (
 
 
 @app.function(image=ml_image,
-              mounts = [modal.Mount.from_local_dir(cwd, remote_path="/root")],
               gpu="h100",
-              volumes={"/my_vol": modal.Volume.from_name("data_tiny")},
-              timeout=1200)
-def model_run(data_dir, model_ind, size_lim, num_epochs, batch_size, num_workers):
+              volumes={"/my_vol": modal.Volume.from_name("data-tiny")},
+              timeout=6000)
+def model_run(data_dir, model_ind, size_lim, num_epochs, batch_size, num_workers, res_net):
     device = ("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using {device} device")
 
@@ -48,7 +43,7 @@ def model_run(data_dir, model_ind, size_lim, num_epochs, batch_size, num_workers
 
     dataloader_dict = {x: torch.utils.data.DataLoader(dataset_dict[x], batch_size=batch_size, num_workers=num_workers, shuffle=True) for x in splits}
 
-    model = VaryNets(placement=model_ind).to(device=device)
+    model = VaryNets(placement=model_ind, res_net=res_net).to(device=device)
 
     def init_weights(m):
         if isinstance(m, nn.Conv3d):
@@ -75,7 +70,7 @@ def main():
     data_dir = "/my_vol/tiny"
     for i in range(9):
         model_name = f"upsample_at_location_{i}"
-        state, val_loss, train_loss = model_run.remote(data_dir, model_ind=i, size_lim=10000, num_epochs=20, batch_size=16, num_workers=4)
+        state, val_loss, train_loss = model_run.remote(data_dir, model_ind=i, size_lim=10000, num_epochs=50, batch_size=16, num_workers=4, res_net=True)
         print(f"Ran the function for {model_name}")
         torch.save(state, os.path.join(save_dir, f"{model_name}.pt"))
         val_loss = np.array(val_loss)

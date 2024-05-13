@@ -1,14 +1,6 @@
 import torch
-import os
-import os.path as osp
-import cv2
-import itertools as it
-import numpy as np
-import random
-from torchvision import transforms, io
 import torch.nn as nn
 import torch
-import matplotlib.pyplot as plt
 
 def sub_sample(image, factor):
     """
