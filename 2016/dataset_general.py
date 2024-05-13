@@ -31,13 +31,13 @@ class CustomDataset(torch.utils.data.Dataset):
         for fn in self.fn_list:
             data = self.read_data(os.path.join(self.data_dir, fn))
             target = data
-            
+
             if self.transform:
                 data = self.transform(data)
             if self.target_transform:
                 target = self.target_transform(target)
 
-            res.append(data, target)
+            res.append((fn, data, target))
 
         return res
 
