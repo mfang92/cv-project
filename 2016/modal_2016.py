@@ -28,7 +28,7 @@ ml_image = (
                  "opencv-python")
 )
 
-vol = Volume.from_name("my-volume", create_if_missing=True)
+vol = Volume.from_name("data", create_if_missing=True)
 
 with ml_image.imports():
     import torch
@@ -43,9 +43,7 @@ def model_run(data_dir, size_lim, num_epochs):
     device = ("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using {device} device")
 
-    print(os.listdir("/root/data/test"))
-
-    data_dir = "/root/data/test"
+    data_dir = "/root/data/patches_set14" # TODO: replace with volume
 
     factor = 3
     read_data = lambda path: torchvision.io.read_image(path) # reads into tensor
@@ -74,10 +72,6 @@ def model_run(data_dir, size_lim, num_epochs):
 
     _, val_loss, train_loss = train_model(model, dataloader_dict, torch.nn.MSELoss(), torch.optim.Adam(model.parameters()), num_epochs=num_epochs)
 
-    # model_ft.load_state_dict(torch.load(resume_from))
-    # torch.save(best_model_wts, os.path.join(save_dir, 'weights_best_val_acc.pt'))
-
-
     return model.to("cpu").state_dict(), val_loss, train_loss
 
 @app.local_entrypoint()
@@ -86,7 +80,6 @@ def main():
     model_name = "base_model"
     state, val_loss, train_loss = model_run.remote("data/tiny_test", None, 20)
 
-    # state, val_loss, train_loss = model_run.remote("data/tiny_test", None, 20)
     print(f"Ran the function")
     torch.save(state, os.path.join(save_dir, f"{model_name}.pt"))
     val_loss = np.array(val_loss)
