@@ -16,10 +16,6 @@ import sys
 from dataset import Videos
 import pathlib
 
-
-cwd = os.getcwd()
-p = pathlib.Path()
-
 app = modal.App(
     "example-get-started"
 )  # Note: prior to April 2024, "app" was called "stub"

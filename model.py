@@ -49,7 +49,7 @@ class VaryNets(Net):
                 x = F.relu(self.convs[i](x))
             else:
                 x = self.upsample(x)
-
+                x = F.relu(self.convs[i](x))
         return x + self.upsample(identity) if self.res_net else x
 
 if __name__ == "__main__":
