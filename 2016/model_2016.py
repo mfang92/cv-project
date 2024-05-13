@@ -28,15 +28,16 @@ class Net_2016(nn.Module):
     def __init__(self, device = None):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 64, (9, 9), padding=(4, 4), device=device) # TODO: change padding
-        self.conv2 = nn.Conv2d(64, 32, (1, 1), padding=(0, 0), device=device)
+        self.conv2 = nn.Conv2d(64, 32, (3, 3), padding=(1, 1), device=device)
         self.conv3 = nn.Conv2d(32, 3, (5, 5), padding=(2, 2), device=device)
 
     def forward(self, x):
-        # x = self.upsample(x)
+        identity = x.clone().detach() # residual
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = self.conv3(x) # no ReLU on the third? apparently
-        return x
+        return identity + x # residual
+    #   return x
 
 if __name__ == "__main__":
     net = Net_2016()
