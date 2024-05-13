@@ -40,7 +40,6 @@ class VaryNets(Net):
         self.placement = placement
         self.convs = self.convs[:placement] + [self.convs[8]] + self.convs[placement:8]
         self.res_net = res_net
-        print(self.convs)
     
     def forward(self, x):
         identity = x.clone()
