@@ -5,16 +5,16 @@ class Net(nn.Module):
     def __init__(self, device=None):
         super().__init__()
         self.conv1 = nn.Conv3d(3, 3, (1, 3, 3), padding=(0, 1, 1), device=device)
-        self.conv2 = nn.Conv3d(3, 3, (3, 1, 1), padding=(1, 0, 0), device=device)
+        self.conv2 = nn.Conv3d(3, 3, (3, 1, 1), padding=(1, 0, 0), padding_mode='replicate', device=device)
 
         self.conv3 = nn.Conv3d(3, 3, (1, 3, 3), padding=(0, 1, 1), device=device)
-        self.conv4 = nn.Conv3d(3, 3, (3, 1, 1), padding=(1, 0, 0), device=device)
+        self.conv4 = nn.Conv3d(3, 3, (3, 1, 1), padding=(1, 0, 0), padding_mode='replicate', device=device)
 
         self.conv5 = nn.Conv3d(3, 3, (1, 3, 3), padding=(0, 1, 1), device=device)
-        self.conv6 = nn.Conv3d(3, 3, (3, 1, 1), padding=(1, 0, 0), device=device)
+        self.conv6 = nn.Conv3d(3, 3, (3, 1, 1), padding=(1, 0, 0), padding_mode='replicate', device=device)
 
         self.conv7 = nn.Conv3d(3, 3, (1, 3, 3), padding=(0, 1, 1), device=device)
-        self.conv8 = nn.Conv3d(3, 3, (3, 1, 1), padding=(1, 0, 0), device=device)
+        self.conv8 = nn.Conv3d(3, 3, (3, 1, 1), padding=(1, 0, 0), padding_mode='replicate', device=device)
 
         self.convs = [self.conv1, self.conv2, self.conv3, self.conv4, self.conv5, self.conv6, self.conv7, self.conv8, lambda x: x]
 
@@ -49,8 +49,8 @@ class VaryNets(Net):
                 x = F.relu(self.convs[i](x))
             else:
                 x = self.upsample(x)
-
-        return x + self.upsample(identity) if self.res_net else x
+                x = F.relu(self.convs[i](x))
+        return x
 
 if __name__ == "__main__":
     # net = Net()

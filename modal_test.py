@@ -16,10 +16,6 @@ import sys
 from dataset import Videos
 import pathlib
 
-
-cwd = os.getcwd()
-p = pathlib.Path()
-
 app = modal.App(
     "example-get-started"
 )  # Note: prior to April 2024, "app" was called "stub"
@@ -31,10 +27,9 @@ ml_image = (
 
 
 @app.function(image=ml_image,
-              mounts = [modal.Mount.from_local_dir(cwd, remote_path="/root")],
               gpu="h100",
-              volumes={"/my_vol": modal.Volume.from_name("data_tiny")},
-              timeout=3600)
+              volumes={"/my_vol": modal.Volume.from_name("data-tiny")},
+              timeout=6000)
 def model_run(data_dir, model_ind, size_lim, num_epochs, batch_size, num_workers, res_net):
     device = ("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using {device} device")
@@ -56,11 +51,11 @@ def model_run(data_dir, model_ind, size_lim, num_epochs, batch_size, num_workers
             m.bias.data.fill_(0)
     model.apply(init_weights)
 
-    _, val_loss, train_loss = train_model(model, 
-                dataloader_dict, 
-                lambda input, target: torch.nn.MSELoss()(input[:, :, 4:6, 8:92, 8:92], target[:, :, 4:6, 8:92, 8:92]), 
-                torch.optim.Adam(model.parameters()), 
-                num_epochs=20)
+    _, val_loss, train_loss = train_model(model,
+                                          dataloader_dict,
+                                          lambda input, target: torch.nn.MSELoss()(input[:, :, :, 8:92, 8:92], target[:, :, :, 8:92, 8:92]),
+                                          torch.optim.Adam(model.parameters()),
+                                          num_epochs=num_epochs)
 
     # model_ft.load_state_dict(torch.load(resume_from))
     # torch.save(best_model_wts, os.path.join(save_dir, 'weights_best_val_acc.pt'))
