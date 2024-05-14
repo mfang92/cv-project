@@ -11,12 +11,12 @@ print(f"Using {device} device")
 
 root = os.getcwd()
 
-placement = 4
+placement = 8
 
-model = VaryNets(placement=3)
+model = VaryNets(placement=placement)
 model.load_state_dict(torch.load(f"saved_model/upsample_at_location_{placement}.pt"))
 
-fullname = osp.join(root, "data/raw_videos/133157016.mp4")
+fullname = osp.join(root, "data/video.mov")
 capture = cv2.VideoCapture(fullname)
 
 n = 0
