@@ -90,39 +90,39 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
 
 
 if __name__ == '__main__':
-    root = os.getcwd()
-    vid_dir = osp.join(root, "data/tiny_test")
+    # root = os.getcwd()
+    # vid_dir = osp.join(root, "data/tiny_test")
 
-    # transform = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
-    #                                                 std=[0.299, 0.224, 0.225])
-    # dataset = Videos(vid_dir, transform=transform)
+    # # transform = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
+    # #                                                 std=[0.299, 0.224, 0.225])
+    # # dataset = Videos(vid_dir, transform=transform)
 
-    dataset = Videos(vid_dir)
+    # dataset = Videos(vid_dir)
 
-    split_dataset = torch.utils.data.random_split(dataset, [0.6, 0.2, 0.2])
-    splits = ['train', 'validate', 'test']
-    dataset_dict = {splits[i]: split_dataset[i] for i in range(3)}
+    # split_dataset = torch.utils.data.random_split(dataset, [0.6, 0.2, 0.2])
+    # splits = ['train', 'validate', 'test']
+    # dataset_dict = {splits[i]: split_dataset[i] for i in range(3)}
 
-    dataloader_dict = {x: torch.utils.data.DataLoader(dataset_dict[x], batch_size=16, shuffle=True) for x in splits}
-    model = VaryNets(device=device, placement=4, res_net=True)
+    # dataloader_dict = {x: torch.utils.data.DataLoader(dataset_dict[x], batch_size=16, shuffle=True) for x in splits}
+    # model = VaryNets(device=device, placement=4, res_net=True)
 
-    def init_weights(m):
-        if isinstance(m, nn.Conv3d):
-            # print(m.weight)
-            torch.nn.init.kaiming_normal_(m.weight)
-            m.bias.data.fill_(0)
-    def printer(m):
-        print("aaa")
-        if isinstance(m, nn.Conv3d):
-            print(m.weight)
+    # def init_weights(m):
+    #     if isinstance(m, nn.Conv3d):
+    #         # print(m.weight)
+    #         torch.nn.init.kaiming_normal_(m.weight)
+    #         m.bias.data.fill_(0)
+    # def printer(m):
+    #     print("aaa")
+    #     if isinstance(m, nn.Conv3d):
+    #         print(m.weight)
 
-    model.apply(init_weights)
+    # model.apply(init_weights)
 
-    train_model(model, 
-                dataloader_dict, 
-                lambda input, target: torch.nn.MSELoss()(input[:, :, :, 8:92, 8:92], target[:, :, :, 8:92, 8:92]), 
-                torch.optim.Adam(model.parameters()), 
-                num_epochs=20)
+    # train_model(model, 
+    #             dataloader_dict, 
+    #             lambda input, target: torch.nn.MSELoss()(input[:, :, :, 8:92, 8:92], target[:, :, :, 8:92, 8:92]), 
+    #             torch.optim.Adam(model.parameters()), 
+    #             num_epochs=20)
 
     # fullname = osp.join(root, "data/raw_videos/54530924.mp4")
     # capture = cv2.VideoCapture(fullname)
@@ -193,4 +193,17 @@ if __name__ == '__main__':
     #     plt.imshow(origed)
     #     plt.colorbar()
     # plt.show()
-    
+
+    pass
+    # model_weights = torch.load("saved_model/upsample_at_location_4.pt")
+    # model = Net()
+    # model.load_state_dict(model_weights)
+    # conv_weights = model_weights["conv1.weight"].numpy()
+    # print(conv_weights.shape)
+    # fig, ax = plt.subplots(3, 3)
+    # for i in range(3):
+    #     for j in range(3):
+    #         weights = conv_weights[i, j, 0, :, :]
+    #         x = ax[i, j].imshow(weights, cmap='hot', interpolation="nearest")
+    #         fig.colorbar(x, ax=ax[i, j])
+    # plt.show()
