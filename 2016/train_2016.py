@@ -32,8 +32,8 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
     '''
     since = time.time()
 
-    val_acc_history = []
-    train_acc_history = []
+    val_loss_history = []
+    train_loss_history = []
 
     best_model_wts = copy.deepcopy(model.state_dict())
     best_model = model
@@ -99,8 +99,11 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
                 best_model = copy.deepcopy(model)
                 smallest_loss = epoch_loss
                 first = False
+
+            if phase == 'train':
+                train_loss_history.append(epoch_loss)
             if phase == 'validate':
-                val_acc_history.append(epoch_loss)
+                val_loss_history.append(epoch_loss)
 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
@@ -112,7 +115,7 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
         print("train, save_dir", save_dir)
         torch.save(best_model_wts, os.path.join(save_dir, 'weights_best_val_acc.pt'))
 
-    return best_model, val_acc_history, train_acc_history # instead of returning model
+    return best_model, val_loss_history, train_loss_history # instead of returning last model
 
 
 
@@ -157,8 +160,7 @@ if __name__ == '__main__':
     train_model(
         model, 
         dataloader_dict, 
-        lambda input, target: torch.nn.MSELoss()(input, 
-                                                 target[:, :, pad:-pad, pad:-pad]), 
+        lambda input, target: customLoss(input, target, torch.nn.MSELoss()),
         torch.optim.Adam(model.parameters()), 
         num_epochs=20,
         save_dir=osp.join(root, "save_train")

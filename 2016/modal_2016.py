@@ -84,13 +84,18 @@ def model_run(data_dir, num_epochs, size_lim, patches_lim):
 
 @app.local_entrypoint()
 def main():
-    save_dir= osp.join(cwd, "saved")
+    save_dir= osp.join(cwd, "final")
     data_dir = "/data/raw/DIV2k" # volume
 
     print("main, save_dir", save_dir)
 
-    model_name = "9-3-5-epoch_20_size_200_patches_100-v2"
-    state, _, _ = model_run.remote(data_dir, 20, None, None) # total num of patches <= size_lim * num
+    model_name = "upsamplewhole9-3-5-epoch_20_size_200_patches_100"
+    state, val_loss, train_loss = model_run.remote(data_dir, 20, 200, 100) # total num of patches <= size_lim * num
 
     print(f"Ran the function")
     torch.save(state, os.path.join(save_dir, f"{model_name}.pt"))
+    val_loss = np.array(val_loss)
+    train_loss = np.array(train_loss)
+    np.save(f"{save_dir}/{model_name}_val", val_loss)
+    np.save(f"{save_dir}/{model_name}_loss", train_loss)
+    
