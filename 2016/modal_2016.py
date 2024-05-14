@@ -73,8 +73,7 @@ def model_run(data_dir, num_epochs, size_lim, patches_lim):
     best_model, val_loss, train_loss = train_model(
         model, 
         dataloader_dict, 
-        lambda input, target: torch.nn.MSELoss()(input, 
-                                                 target[:, :, pad:-pad, pad:-pad]), 
+        lambda input, target: customLoss(input, target, torch.nn.MSELoss()),
         torch.optim.Adam(model.parameters()), 
         num_epochs=num_epochs,
         
@@ -90,8 +89,8 @@ def main():
 
     print("main, save_dir", save_dir)
 
-    model_name = "9-3-5-epoch_2_size_10_patches_10"
-    state, _, _ = model_run.remote(data_dir, 2, 10, 10) # total num of patches <= size_lim * num
+    model_name = "9-3-5-epoch_20_size_200_patches_100-v2"
+    state, _, _ = model_run.remote(data_dir, 20, None, None) # total num of patches <= size_lim * num
 
     print(f"Ran the function")
     torch.save(state, os.path.join(save_dir, f"{model_name}.pt"))

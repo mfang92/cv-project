@@ -40,3 +40,52 @@ def getPatches(fn, image, f_sub):
             patches.append((name, patch))
 
     return patches
+
+def customLoss(result, target, criterion):
+    """
+        result: tensor
+        target: tensor
+    """
+
+    _, _, result_h, result_w = result.shape
+    _, _, target_h, target_w  = target.shape
+
+    assert(result_h <= target_h)
+    assert(result_w <= target_w)
+
+    h_pad = (target_h - result_h)//2
+    w_pad = (target_w - result_w)//2
+
+    if h_pad%2 or w_pad%2:
+        assert("must have even padding")
+
+    h_end = -h_pad if h_pad else result_h
+    w_end = -w_pad if w_pad else result_w
+
+    return criterion(result, target[:, :, h_pad:h_end, w_pad:w_end])
+
+def customLoss3D(result, target, criterion):
+    """
+        result: tensor
+        target: tensor
+    """
+
+    _, _, result_f, result_h, result_w = result.shape
+    _, _, target_f, target_h, target_w  = target.shape
+
+    assert(result_h <= target_h)
+    assert(result_w <= target_w)
+    assert(result_f <= target_f)
+
+    h_pad = (target_h - result_h)//2
+    w_pad = (target_w - result_w)//2
+    f_pad = (target_f - result_f)//2
+
+    if h_pad%2 or w_pad%2 or f_pad%2:
+        assert("must have even padding")
+
+    h_end = -h_pad if h_pad else result_h
+    w_end = -w_pad if w_pad else result_w
+    f_end = -f_pad if f_pad else result_f
+
+    return criterion(result, target[:, :, f_pad:f_end, h_pad:h_end, w_pad:w_end])
