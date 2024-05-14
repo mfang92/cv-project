@@ -127,9 +127,9 @@ if __name__ == '__main__':
     transform = lambda img: interpolate(sub_sample(img, factor), factor) # subsample down, interpolate back up
     dataset = CustomDataset(img_dir, read_data, transform, size_lim=90*20) # TODO: try different size_lim later
 
-    split_dataset = torch.utils.data.random_split(dataset, [0.6, 0.2, 0.2])
-    splits = ['train', 'validate', 'test']
-    dataset_dict = {splits[i]: split_dataset[i] for i in range(3)}
+    split_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
+    splits = ['train', 'validate']
+    dataset_dict = {splits[i]: split_dataset[i] for i in range(len(splits))}
 
     dataloader_dict = {x: torch.utils.data.DataLoader(dataset_dict[x], batch_size=8, shuffle=True) for x in splits}
     model = Net_2016(device=device)
