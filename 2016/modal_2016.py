@@ -6,7 +6,7 @@ import torch
 from tqdm import tqdm
 from model_2016 import Net_2016
 from train_2016 import train_model
-from dataset_general import CustomDataset
+from trainingdataset import TrainingDataset
 from image_functions import *
 import torchvision
 import numpy as np
@@ -40,15 +40,21 @@ with ml_image.imports():
 @app.function(image=ml_image,
               volumes={"/data": vol},
               mounts = [modal.Mount.from_local_dir(cwd, remote_path="/root")], 
-              gpu="h100")
-def model_run(data_dir, size_lim, num_epochs):
+              gpu="h100",
+              timeout=1000)
+def model_run(data_dir, num_epochs, size_lim, patches_lim):
     device = ("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using {device} device")
-    
+
     factor = 3
     read_data = lambda path: torchvision.io.read_image(path) # reads into tensor
     transform = lambda img: interpolate(sub_sample(img, factor), factor) # subsample down, interpolate back up
-    dataset = CustomDataset(data_dir, read_data, transform, size_lim=size_lim) # TODO: try different size_lim later
+    dataset = TrainingDataset(
+        data_dir, 
+        read_data, 
+        transform, 
+        size_lim=size_lim, 
+        patches_lim=patches_lim) # TODO: try different size_lim later
 
     split_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
     splits = ['train', 'validate']
@@ -80,12 +86,12 @@ def model_run(data_dir, size_lim, num_epochs):
 @app.local_entrypoint()
 def main():
     save_dir= osp.join(cwd, "saved")
-    data_dir = "/data/data/train/DIV2k_patches" # volume
+    data_dir = "/data/raw/DIV2k" # volume
 
     print("main, save_dir", save_dir)
 
-    model_name = "9-3-5_size_lim_1000-epoch_20"
-    state, _, _ = model_run.remote(data_dir, 10000, 20)
+    model_name = "9-3-5-epoch_2_size_10_patches_10"
+    state, _, _ = model_run.remote(data_dir, 2, 10, 10) # total num of patches <= size_lim * num
 
     print(f"Ran the function")
     torch.save(state, os.path.join(save_dir, f"{model_name}.pt"))

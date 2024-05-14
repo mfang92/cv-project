@@ -7,7 +7,7 @@ import copy
 from tqdm import tqdm
 import torch.nn as nn
 from model_2016 import Net_2016
-from dataset_general import CustomDataset
+from trainingdataset import TrainingDataset
 from image_functions import *
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -118,14 +118,24 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
 
 if __name__ == '__main__':
     root = os.getcwd()
-    img_dir = osp.join(root, "data/patches_set14")
+    img_dir = osp.join(root, "data/set14")
     print(img_dir)
 
     factor = 3
 
     read_data = lambda path: torchvision.io.read_image(path) # reads into tensor
     transform = lambda img: interpolate(sub_sample(img, factor), factor) # subsample down, interpolate back up
-    dataset = CustomDataset(img_dir, read_data, transform, size_lim=90*20) # TODO: try different size_lim later
+    dataset = TrainingDataset(img_dir, read_data, transform, size_lim=10, patches_lim=100) # TODO: try different size_lim later
+
+    # print(len(dataset.data))
+    # print(dataset.data[0][1].shape)
+    # print(dataset[3][0].shape, dataset[3][1].shape)
+
+    for data in dataset:
+        if (data[0].shape[0]==1):
+            print(data[0].shape)
+        if (data[1].shape[0]==1):
+            print(data[1].shape)
 
     split_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
     splits = ['train', 'validate']
