@@ -67,7 +67,7 @@ def model_run(data_dir, model_ind, size_lim, num_epochs, batch_size, num_workers
 def main():
     save_dir="saved_model_2"
     data_dir = "/my_vol/tiny"
-    for i in range(9):
+    for i in range(1, 9):
         model_name = f"upsample_at_location_{i}"
         state, val_loss, train_loss = model_run.remote(data_dir, model_ind=i, size_lim=15000, num_epochs=100, batch_size=64, num_workers=4)
         print(f"Ran the function for {model_name}")
