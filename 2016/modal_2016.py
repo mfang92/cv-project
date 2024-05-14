@@ -6,7 +6,7 @@ import torch
 from tqdm import tqdm
 from model_2016 import Net_2016
 from train_2016 import train_model
-from dataset_general import CustomDataset
+from trainingdataset import TrainingDataset
 from image_functions import *
 import torchvision
 import numpy as np
@@ -40,29 +40,25 @@ with ml_image.imports():
 @app.function(image=ml_image,
               volumes={"/data": vol},
               mounts = [modal.Mount.from_local_dir(cwd, remote_path="/root")], 
-              gpu="h100")
-def model_run(data_dir, size_lim, num_epochs):
+              gpu="h100",
+              timeout=1000)
+def model_run(data_dir, num_epochs, size_lim, patches_lim):
     device = ("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using {device} device")
-
-    # data_dir = "/root/data/patches_set14" # TODO: replace with volume
-    
 
     factor = 3
     read_data = lambda path: torchvision.io.read_image(path) # reads into tensor
     transform = lambda img: interpolate(sub_sample(img, factor), factor) # subsample down, interpolate back up
-    dataset = CustomDataset(data_dir, read_data, transform, size_lim=size_lim) # TODO: try different size_lim later
+    dataset = TrainingDataset(
+        data_dir, 
+        read_data, 
+        transform, 
+        size_lim=size_lim, 
+        patches_lim=patches_lim) # TODO: try different size_lim later
 
-    # print(dataset)
-    # dataset = CustomDataset(data_dir, read_data, size_lim=90)
-    # print("created dataset")
-
-    split_dataset = torch.utils.data.random_split(dataset, [0.6, 0.2, 0.2])
-    splits = ['train', 'validate', 'test']
-    dataset_dict = {splits[i]: split_dataset[i] for i in range(3)}
-
-    # print(dataset_dict['train'][0][0].shape)
-
+    split_dataset = torch.utils.data.random_split(dataset, [0.8, 0.2])
+    splits = ['train', 'validate']
+    dataset_dict = {splits[i]: split_dataset[i] for i in range(len(splits))}
     dataloader_dict = {x: torch.utils.data.DataLoader(dataset_dict[x], batch_size=16, num_workers=4, shuffle=True) for x in splits}
 
     model = Net_2016().to(device=device)
@@ -73,12 +69,14 @@ def model_run(data_dir, size_lim, num_epochs):
             m.bias.data.fill_(0)
     model.apply(init_weights)
 
+    pad = 4+1+2
     best_model, val_loss, train_loss = train_model(
         model, 
         dataloader_dict, 
-        torch.nn.MSELoss(), 
+        lambda input, target: customLoss(input, target, torch.nn.MSELoss()),
         torch.optim.Adam(model.parameters()), 
         num_epochs=num_epochs,
+        
     )
 
     # return model.to("cpu").state_dict(), val_loss, train_loss
@@ -87,12 +85,12 @@ def model_run(data_dir, size_lim, num_epochs):
 @app.local_entrypoint()
 def main():
     save_dir= osp.join(cwd, "saved")
-    data_dir = "/data/data/train/DIV2k_patches" # volume
+    data_dir = "/data/raw/DIV2k" # volume
 
     print("main, save_dir", save_dir)
 
-    model_name = "modal_small"
-    state, _, _ = model_run.remote(data_dir, 10000, 5)
+    model_name = "9-3-5-epoch_20_size_200_patches_100-v2"
+    state, _, _ = model_run.remote(data_dir, 20, None, None) # total num of patches <= size_lim * num
 
     print(f"Ran the function")
     torch.save(state, os.path.join(save_dir, f"{model_name}.pt"))
