@@ -1,17 +1,13 @@
-from model_2016 import Net_2016
-from dataset_general import CustomDataset
-
 import os
 import os.path as osp
 import time
 import torchvision
 import torch
 import copy
-# import matplotlib.pyplot as plt
 from tqdm import tqdm
 import torch.nn as nn
-# import cv2
-
+from model_2016 import Net_2016
+from dataset_general import CustomDataset
 from image_functions import *
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -31,6 +27,8 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
               Using None will not write anything to disk
     save_all_epochs: Whether to save weights for ALL epochs, not just the best
                      validation error epoch. Will save to save_dir/weights_e{#}.pt
+
+    Returns the model with the smallest loss
     '''
     since = time.time()
 
@@ -38,7 +36,9 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
     train_acc_history = []
 
     best_model_wts = copy.deepcopy(model.state_dict())
-    best_acc = 0.0
+    best_model = model
+    smallest_loss = 0.0
+    first = True
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch + 1, num_epochs))
@@ -52,7 +52,6 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
                 model.eval()   # Set model to evaluate mode
 
             running_loss = 0.0
-            running_corrects = 0
 
             # Iterate over data.
             # TQDM has nice progress bars
@@ -85,57 +84,52 @@ def train_model(model, dataloaders, criterion, optimizer, save_dir = None, save_
 
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
-                running_corrects += torch.sum(loss)
 
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
-            epoch_acc = float(running_corrects) / len(dataloaders[phase].dataset)
 
             print('{} Loss: {:.4f}'.format(phase, epoch_loss))
             # print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
             # deep copy the model
-            if phase == 'validate' and epoch_acc > best_acc:
+            print("epoch_loss: ", epoch_loss)
+            print("smallest_loss: ", smallest_loss)
+            if phase == 'validate' and (epoch_loss < smallest_loss or first):
                 print("best found")
                 best_model_wts = model.state_dict()
-                best_acc = epoch_acc
-            # if phase == 'val' and epoch_acc > best_acc:
-            #     best_acc = epoch_acc
-            #     best_model_wts = copy.deepcopy(model.state_dict())
-            # if phase == 'train':
-            #     train_acc_history.append(epoch_acc)
+                best_model = copy.deepcopy(model)
+                smallest_loss = epoch_loss
+                first = False
             if phase == 'validate':
                 val_acc_history.append(epoch_loss)
-            # if save_all_epochs:
-            #     torch.save(model.state_dict(), os.path.join(save_dir, f'weights_{epoch}.pt'))
 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
     # print('Best val Acc: {:4f}'.format(best_acc))
 
     # save and load best model weights
+
     if (save_dir):
-        print(save_dir)
+        print("train, save_dir", save_dir)
         torch.save(best_model_wts, os.path.join(save_dir, 'weights_best_val_acc.pt'))
 
-    return model, val_acc_history, train_acc_history
+    return best_model, val_acc_history, train_acc_history # instead of returning model
 
 
 
 if __name__ == '__main__':
     root = os.getcwd()
-    img_dir = osp.join(root, "2016/data/patches_train")
+    img_dir = osp.join(root, "data/patches_set14")
+    print(img_dir)
 
     factor = 3
 
     read_data = lambda path: torchvision.io.read_image(path) # reads into tensor
     transform = lambda img: interpolate(sub_sample(img, factor), factor) # subsample down, interpolate back up
-    dataset = CustomDataset(img_dir, read_data, transform)
+    dataset = CustomDataset(img_dir, read_data, transform, size_lim=90*20) # TODO: try different size_lim later
 
     split_dataset = torch.utils.data.random_split(dataset, [0.6, 0.2, 0.2])
     splits = ['train', 'validate', 'test']
     dataset_dict = {splits[i]: split_dataset[i] for i in range(3)}
-
-    # print(dataset_dict['train'][0][0].shape)
 
     dataloader_dict = {x: torch.utils.data.DataLoader(dataset_dict[x], batch_size=8, shuffle=True) for x in splits}
     model = Net_2016(device=device)
@@ -146,13 +140,16 @@ if __name__ == '__main__':
             torch.nn.init.kaiming_normal_(m.weight)
             m.bias.data.fill_(0)
 
+
     model.apply(init_weights)
+
+    pad = 4 + 1 + 2
     train_model(
         model, 
         dataloader_dict, 
-        torch.nn.MSELoss(), 
+        lambda input, target: torch.nn.MSELoss()(input, 
+                                                 target[:, :, pad:-pad, pad:-pad]), 
         torch.optim.Adam(model.parameters()), 
-        num_epochs=2,
-        save_dir=osp.join(root, "2016/save")
+        num_epochs=20,
+        save_dir=osp.join(root, "save_train")
         )
-    
