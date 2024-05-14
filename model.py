@@ -35,22 +35,18 @@ class Net(nn.Module):
         return x
 
 class VaryNets(Net):
-    def __init__(self, device=None, placement = 4, res_net = False):
+    def __init__(self, device=None, placement = 4):
         super().__init__(device=device)
         self.placement = placement
-        self.convs = self.convs[:placement] + [self.convs[8]] + self.convs[placement:8]
-        self.res_net = res_net
     
     def forward(self, x):
-        identity = x.clone()
-
         for i in range(9):
             if i != self.placement:
                 x = F.relu(self.convs[i](x))
             else:
                 x = self.upsample(x)
                 x = F.relu(self.convs[i](x))
-        return x + self.upsample(identity) if self.res_net else x
+        return x
 
 if __name__ == "__main__":
     # net = Net()
