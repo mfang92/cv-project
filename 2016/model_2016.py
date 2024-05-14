@@ -27,7 +27,9 @@ import torch.nn.functional as F
 class Net_2016(nn.Module):
     def __init__(self, device = None):
         super().__init__()
-        self.upsample = nn.Upsample(scale_factor=(3, 3), mode='bicubic')
+        # factor = 3 # 2D
+        factor = 2 # video
+        self.upsample = nn.Upsample(scale_factor=(factor, factor), mode='bicubic')
         self.conv1 = nn.Conv2d(3, 64, (9, 9), padding=(0, 0), device=device) # TODO: change padding
         self.conv2 = nn.Conv2d(64, 32, (3, 3), padding=(0, 0), device=device)
         self.conv3 = nn.Conv2d(32, 3, (5, 5), padding=(0, 0), device=device)
