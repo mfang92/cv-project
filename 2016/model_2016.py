@@ -27,15 +27,19 @@ import torch.nn.functional as F
 class Net_2016(nn.Module):
     def __init__(self, device = None):
         super().__init__()
-        self.conv1 = nn.Conv2d(3, 64, (9, 9), padding=(4, 4), device=device) # TODO: change padding
-        self.conv2 = nn.Conv2d(64, 32, (3, 3), padding=(1, 1), device=device)
-        self.conv3 = nn.Conv2d(32, 3, (5, 5), padding=(2, 2), device=device)
+        self.conv1 = nn.Conv2d(3, 64, (9, 9), padding=(0, 0), device=device) # TODO: change padding
+        self.conv2 = nn.Conv2d(64, 32, (3, 3), padding=(0, 0), device=device)
+        self.conv3 = nn.Conv2d(32, 3, (5, 5), padding=(0, 0), device=device)
 
     def forward(self, x):
+        pad = 4 + 1 + 2
         identity = x.clone().detach() # residual
+        identity = identity[:, :, pad:-pad, pad:-pad]
+
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = self.conv3(x) # no ReLU on the third? apparently
+        
         return identity + x # residual
     #   return x
 
