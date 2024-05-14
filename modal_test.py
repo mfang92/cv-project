@@ -27,7 +27,7 @@ ml_image = (
 
 @app.function(image=ml_image,
               gpu="t4",
-              volumes={"/my_vol": modal.Volume.from_name("data_tiny")},
+              volumes={"/my_vol": modal.Volume.from_name("data-tiny")},
               timeout=6000)
 def model_run(data_dir, model_ind, size_lim, num_epochs, batch_size, num_workers, res_net):
     device = ("cuda" if torch.cuda.is_available() else "cpu")
@@ -67,9 +67,9 @@ def model_run(data_dir, model_ind, size_lim, num_epochs, batch_size, num_workers
 def main():
     save_dir="saved_model"
     data_dir = "/my_vol/tiny"
-    for i in range(1):
+    for i in range(9):
         model_name = f"upsample_at_location_{i}"
-        state, val_loss, train_loss = model_run.remote(data_dir, model_ind=i, size_lim=100, num_epochs=50, batch_size=16, num_workers=4, res_net=True)
+        state, val_loss, train_loss = model_run.remote(data_dir, model_ind=i, size_lim=10000, num_epochs=50, batch_size=16, num_workers=4, res_net=True)
         print(f"Ran the function for {model_name}")
         torch.save(state, os.path.join(save_dir, f"{model_name}.pt"))
         val_loss = np.array(val_loss)
