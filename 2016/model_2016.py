@@ -27,20 +27,40 @@ import torch.nn.functional as F
 class Net_2016(nn.Module):
     def __init__(self, device = None):
         super().__init__()
+        # self.upsample = nn.Upsample(scale_factor=(3, 3), mode='bicubic')
         self.conv1 = nn.Conv2d(3, 64, (9, 9), padding=(0, 0), device=device) # TODO: change padding
         self.conv2 = nn.Conv2d(64, 32, (3, 3), padding=(0, 0), device=device)
         self.conv3 = nn.Conv2d(32, 3, (5, 5), padding=(0, 0), device=device)
 
+    def takePadding(self, og, x):
+        identity = og.clone().detach()
+        _, _, og_h, og_w  = identity.shape
+        _, _, result_h, result_w = x.shape
+
+        assert(result_h <= og_h)
+        assert(result_w <= og_w)
+
+        h_pad = (og_h - result_h)//2
+        w_pad = (og_w - result_w)//2
+
+        if h_pad%2 or w_pad%2:
+            assert("must have even padding")
+
+        h_end = -h_pad if h_pad else result_h
+        w_end = -w_pad if w_pad else result_w
+        identity = identity[:, :, h_pad:h_end, w_pad:w_end]
+
+        return identity, x
+
     def forward(self, x):
-        pad = 4 + 1 + 2
-        identity = x.clone().detach() # residual
-        identity = identity[:, :, pad:-pad, pad:-pad]
-
-        # print(identity.shape)
-
+        identity = x.clone().detach() # ReLU
+        
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = self.conv3(x) # no ReLU on the third? apparently
+
+        # padding for ReLU
+        identity, x = self.takePadding(identity, x)
 
         return identity + x # residual
     #   return x
