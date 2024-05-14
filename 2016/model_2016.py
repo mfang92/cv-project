@@ -36,10 +36,12 @@ class Net_2016(nn.Module):
         identity = x.clone().detach() # residual
         identity = identity[:, :, pad:-pad, pad:-pad]
 
+        # print(identity.shape)
+
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = self.conv3(x) # no ReLU on the third? apparently
-        
+
         return identity + x # residual
     #   return x
 
