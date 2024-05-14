@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-save_dir = "saved_model"
+save_dir = "../saved_model"
 plt.figure(figsize = (12, 7), layout='tight')
 plt.suptitle("Loss vs. Epoch for Non-Residual Network", size=20)
 
