@@ -58,8 +58,8 @@ class Net_2016(nn.Module):
 
     def forward(self, x):
         identity = x.clone().detach() # ReLU
-        x = self.upsample(x)
         x = F.relu(self.conv1(x))
+        x = self.upsample(x)
         x = F.relu(self.conv2(x))
         x = self.conv3(x) # no ReLU on the third? apparently
 
